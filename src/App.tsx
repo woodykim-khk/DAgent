@@ -7,7 +7,7 @@ import AgentActivity from './pages/AgentActivity'
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/DAgent">
       <Layout>
         <Routes>
           <Route path="/" element={<AgentList />} />
