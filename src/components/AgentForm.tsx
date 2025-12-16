@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Save, X, Plus, Edit2, CheckCircle, XCircle } from 'lucide-react'
-import { Agent, Trigger, Behavior, Command, DialogConfig, ReferenceDataItem, ExternalIntegration } from '../types/agent'
+import { Agent, Trigger, Behavior, ReferenceDataItem, ExternalIntegration } from '../types/agent'
 import './AgentForm.css'
 
 interface AgentFormProps {
@@ -163,43 +163,6 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
     })
   }
 
-  const addCommand = () => {
-    const newCommand: Command = {
-      id: `cmd${Date.now()}`,
-      keyword: '',
-      description: '',
-      responseType: 'text',
-    }
-    setFormData({
-      ...formData,
-      skills: {
-        ...formData.skills!,
-        commands: [...formData.skills!.commands, newCommand],
-      },
-    })
-  }
-
-  const removeCommand = (id: string) => {
-    setFormData({
-      ...formData,
-      skills: {
-        ...formData.skills!,
-        commands: formData.skills!.commands.filter(c => c.id !== id),
-      },
-    })
-  }
-
-  const updateCommand = (id: string, updates: Partial<Command>) => {
-    setFormData({
-      ...formData,
-      skills: {
-        ...formData.skills!,
-        commands: formData.skills!.commands.map(c =>
-          c.id === id ? { ...c, ...updates } : c
-        ),
-      },
-    })
-  }
 
   return (
     <form onSubmit={handleSubmit} className="agent-form">
@@ -632,339 +595,163 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
 
         {activeTab === 'integration' && (
           <div className="form-section">
-            <h3>트리거 설정</h3>
-            
-            <div className="skill-section">
-              <h4>📋 기본 응답 설정</h4>
-              <div className="form-group">
-                <label>응답 모드</label>
-                <select
-                  value={formData.skills!.responseMode}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    skills: {
-                      ...formData.skills!,
-                      responseMode: e.target.value as 'command' | 'mixed',
-                    },
-                  })}
-                >
-                  <option value="command">명령어 기반 응답 (MVP 기본)</option>
-                  <option value="mixed">자연어 + 명령어 혼합 (향후 확장)</option>
-                </select>
-                <p className="help-text">
-                  명령어 기반 모드에서는 @앱이름 + 키워드로만 동작하며, 일반 메시지에는 도움말만 표시됩니다.
+            <div className="trigger-settings-header">
+              <div>
+                <h3>트리거 설정</h3>
+                <p className="section-description">
+                  에이전트가 자동으로 동작하도록 트리거를 설정하세요. 각 트리거 유형을 선택적으로 추가할 수 있습니다.
                 </p>
-              </div>
-              <div className="form-group">
-                <label>도움말 메시지</label>
-                <textarea
-                  value={formData.skills!.helpMessage}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    skills: {
-                      ...formData.skills!,
-                      helpMessage: e.target.value,
-                    },
-                  })}
-                  placeholder="키워드가 포함되지 않은 메시지 발송 시 표시될 설명"
-                  rows={3}
-                />
               </div>
             </div>
 
-            <div className="skill-section">
-              <h4>🎯 명령어 스킬</h4>
-              <div className="command-list">
-                {formData.skills!.commands.map((cmd) => (
-                  <div key={cmd.id} className="command-item">
-                    <div className="command-header">
-                      <div className="command-info">
-                        <span className="command-keyword">@{cmd.keyword || '명령어'}</span>
-                        <span className="command-description">{cmd.description || '설명 없음'}</span>
-                        {cmd.responseType === 'dialog' && (
-                          <span className="command-badge">다이얼로그</span>
-                        )}
+            {/* 트리거 타입 선택 카드 */}
+            <div className="trigger-type-cards">
+              <div className="trigger-type-card" onClick={() => {
+                const newTrigger: Trigger = {
+                  id: `t${Date.now()}`,
+                  type: 'natural',
+                  content: '',
+                }
+                setFormData({
+                  ...formData,
+                  triggers: [...formData.triggers, newTrigger],
+                })
+              }}>
+                <div className="trigger-card-icon">💬</div>
+                <div className="trigger-card-content">
+                  <h5>자연어 트리거</h5>
+                  <p>자연어로 트리거 조건을 설정합니다</p>
+                </div>
+                <Plus size={20} className="trigger-card-add" />
+              </div>
+
+              <div className="trigger-type-card" onClick={() => {
+                const newTrigger: Trigger = {
+                  id: `t${Date.now()}`,
+                  type: 'keyword',
+                  keywords: [],
+                  content: '',
+                }
+                setFormData({
+                  ...formData,
+                  triggers: [...formData.triggers, newTrigger],
+                })
+              }}>
+                <div className="trigger-card-icon">🔑</div>
+                <div className="trigger-card-content">
+                  <h5>키워드 트리거</h5>
+                  <p>특정 키워드 탐지 시 발동합니다</p>
+                </div>
+                <Plus size={20} className="trigger-card-add" />
+              </div>
+
+              <div className="trigger-type-card" onClick={() => {
+                const newTrigger: Trigger = {
+                  id: `t${Date.now()}`,
+                  type: 'command',
+                  commandKeyword: '',
+                  content: '',
+                }
+                setFormData({
+                  ...formData,
+                  triggers: [...formData.triggers, newTrigger],
+                })
+              }}>
+                <div className="trigger-card-icon">⚡</div>
+                <div className="trigger-card-content">
+                  <h5>명령어 트리거</h5>
+                  <p>명령어 키워드로 발동합니다</p>
+                </div>
+                <Plus size={20} className="trigger-card-add" />
+              </div>
+            </div>
+
+            {/* 트리거 목록 */}
+            {formData.triggers.length > 0 && (
+              <div className="trigger-list-compact">
+                {formData.triggers.map((trigger) => (
+                  <div key={trigger.id} className="trigger-item-compact">
+                    <div className="trigger-item-header-compact">
+                      <div className="trigger-item-info">
+                        <span className="trigger-type-badge">
+                          {trigger.type === 'natural' && '💬 자연어'}
+                          {trigger.type === 'keyword' && '🔑 키워드'}
+                          {trigger.type === 'command' && '⚡ 명령어'}
+                        </span>
+                        <span className="trigger-preview">
+                          {trigger.type === 'keyword' && (trigger.keywords?.join(', ') || '키워드 없음')}
+                          {trigger.type === 'command' && (trigger.commandKeyword || '명령어 없음')}
+                          {trigger.type === 'natural' && (trigger.content || '내용 없음')}
+                        </span>
                       </div>
-                      <div className="command-actions">
-                        {cmd.id !== 'help' && (
-                          <button
-                            type="button"
-                            onClick={() => removeCommand(cmd.id)}
-                            className="remove-button"
-                          >
-                            <X size={16} />
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setEditingCommand(editingCommand === cmd.id ? null : cmd.id)}
-                          className="edit-button"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeTrigger(trigger.id)}
+                        className="remove-button"
+                      >
+                        <X size={16} />
+                      </button>
                     </div>
-                    {editingCommand === cmd.id && (
-                      <div className="command-edit-form">
+                    <div className="trigger-item-form">
+                      {trigger.type === 'natural' && (
                         <div className="form-group">
-                          <label>명령어 키워드 *</label>
-                          <input
-                            type="text"
-                            value={cmd.keyword}
-                            onChange={(e) => updateCommand(cmd.id, { keyword: e.target.value })}
-                            placeholder="create, status 등"
-                            disabled={cmd.id === 'help'}
+                          <label>트리거 내용</label>
+                          <textarea
+                            value={trigger.content || ''}
+                            onChange={(e) => updateTrigger(trigger.id, { content: e.target.value })}
+                            placeholder="어떤 내용에 대해 동작하도록 자연어로 설정하세요"
+                            rows={2}
                           />
                         </div>
+                      )}
+                      {trigger.type === 'keyword' && (
                         <div className="form-group">
-                          <label>설명</label>
+                          <label>키워드 (쉼표로 구분)</label>
                           <input
                             type="text"
-                            value={cmd.description}
-                            onChange={(e) => updateCommand(cmd.id, { description: e.target.value })}
-                            placeholder="명령어에 대한 설명"
+                            value={trigger.keywords?.join(', ') || ''}
+                            onChange={(e) => updateTrigger(trigger.id, {
+                              keywords: e.target.value.split(',').map(k => k.trim()).filter(k => k),
+                            })}
+                            placeholder="일정, 스케줄, 데드라인"
                           />
+                          <p className="help-text">키워드가 탐지되면 최근 30개 말풍선을 통해 맥락을 파악합니다.</p>
                         </div>
-                        <div className="form-group">
-                          <label>응답 방식</label>
-                          <select
-                            value={cmd.responseType}
-                            onChange={(e) => updateCommand(cmd.id, { responseType: e.target.value as 'text' | 'dialog' })}
-                          >
-                            <option value="text">텍스트 응답</option>
-                            <option value="dialog">다이얼로그 표시</option>
-                          </select>
-                        </div>
-                        {cmd.responseType === 'dialog' && (
-                          <div className="dialog-config">
-                            <h5>다이얼로그 설정</h5>
-                            <div className="form-group">
-                              <label>제목</label>
-                              <input
-                                type="text"
-                                value={cmd.dialogConfig?.title || ''}
-                                onChange={(e) => updateCommand(cmd.id, {
-                                  dialogConfig: {
-                                    ...cmd.dialogConfig,
-                                    title: e.target.value,
-                                  } as DialogConfig,
-                                })}
-                                placeholder="다이얼로그 제목"
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>설명</label>
-                              <textarea
-                                value={cmd.dialogConfig?.description || ''}
-                                onChange={(e) => updateCommand(cmd.id, {
-                                  dialogConfig: {
-                                    ...cmd.dialogConfig,
-                                    description: e.target.value,
-                                  } as DialogConfig,
-                                })}
-                                placeholder="다이얼로그 설명"
-                                rows={2}
-                              />
-                            </div>
+                      )}
+                      {trigger.type === 'command' && (
+                        <>
+                          <div className="form-group">
+                            <label>명령어 키워드</label>
+                            <input
+                              type="text"
+                              value={trigger.commandKeyword || ''}
+                              onChange={(e) => updateTrigger(trigger.id, { commandKeyword: e.target.value })}
+                              placeholder="@앱이름 create, @앱이름 status 등"
+                            />
+                            <p className="help-text">@앱이름 + 명령어 키워드 형식으로 입력하세요.</p>
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <div className="form-group">
+                            <label>설명 (선택)</label>
+                            <input
+                              type="text"
+                              value={trigger.content || ''}
+                              onChange={(e) => updateTrigger(trigger.id, { content: e.target.value })}
+                              placeholder="이 명령어에 대한 설명"
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={addCommand} className="add-button">
-                <Plus size={16} />
-                명령어 추가
-              </button>
-            </div>
+            )}
 
-            <div className="skill-section">
-              <h4>⚡ 트리거 설정</h4>
-              <p className="section-description">
-                에이전트가 자동으로 동작하도록 트리거를 설정하세요. 각 트리거 유형을 선택적으로 추가할 수 있습니다.
-              </p>
-
-              {/* 자연어 트리거 */}
-              <div className="trigger-type-section">
-                <div className="trigger-type-header">
-                  <h5>자연어 트리거</h5>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newTrigger: Trigger = {
-                        id: `t${Date.now()}`,
-                        type: 'natural',
-                        content: '',
-                      }
-                      setFormData({
-                        ...formData,
-                        triggers: [...formData.triggers, newTrigger],
-                      })
-                    }}
-                    className="add-button small"
-                  >
-                    <Plus size={14} />
-                    추가
-                  </button>
-                </div>
-                <div className="trigger-list">
-                  {formData.triggers.filter(t => t.type === 'natural').map((trigger) => (
-                    <div key={trigger.id} className="trigger-item">
-                      <div className="trigger-header">
-                        <span className="trigger-type-label">자연어 트리거</span>
-                        <button
-                          type="button"
-                          onClick={() => removeTrigger(trigger.id)}
-                          className="remove-button"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                      <div className="form-group">
-                        <label>트리거 내용</label>
-                        <textarea
-                          value={trigger.content}
-                          onChange={(e) => updateTrigger(trigger.id, { content: e.target.value })}
-                          placeholder="어떤 내용에 대해 동작하도록 자연어로 설정하세요"
-                          rows={3}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  {formData.triggers.filter(t => t.type === 'natural').length === 0 && (
-                    <div className="empty-trigger-message">
-                      자연어 트리거가 없습니다. 추가 버튼을 클릭하여 추가하세요.
-                    </div>
-                  )}
-                </div>
+            {formData.triggers.length === 0 && (
+              <div className="empty-trigger-message">
+                <p>위의 카드를 클릭하여 트리거를 추가하세요.</p>
               </div>
-
-              {/* 키워드 트리거 */}
-              <div className="trigger-type-section">
-                <div className="trigger-type-header">
-                  <h5>키워드 트리거</h5>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newTrigger: Trigger = {
-                        id: `t${Date.now()}`,
-                        type: 'keyword',
-                        keywords: [],
-                        content: '',
-                      }
-                      setFormData({
-                        ...formData,
-                        triggers: [...formData.triggers, newTrigger],
-                      })
-                    }}
-                    className="add-button small"
-                  >
-                    <Plus size={14} />
-                    추가
-                  </button>
-                </div>
-                <div className="trigger-list">
-                  {formData.triggers.filter(t => t.type === 'keyword').map((trigger) => (
-                    <div key={trigger.id} className="trigger-item">
-                      <div className="trigger-header">
-                        <span className="trigger-type-label">키워드 트리거</span>
-                        <button
-                          type="button"
-                          onClick={() => removeTrigger(trigger.id)}
-                          className="remove-button"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                      <div className="form-group">
-                        <label>키워드 (쉼표로 구분)</label>
-                        <input
-                          type="text"
-                          value={trigger.keywords?.join(', ') || ''}
-                          onChange={(e) => updateTrigger(trigger.id, {
-                            keywords: e.target.value.split(',').map(k => k.trim()).filter(k => k),
-                          })}
-                          placeholder="일정, 스케줄, 데드라인"
-                        />
-                        <p className="help-text">키워드가 탐지되면 최근 30개 말풍선을 통해 맥락을 파악합니다.</p>
-                      </div>
-                    </div>
-                  ))}
-                  {formData.triggers.filter(t => t.type === 'keyword').length === 0 && (
-                    <div className="empty-trigger-message">
-                      키워드 트리거가 없습니다. 추가 버튼을 클릭하여 추가하세요.
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* 명령어 트리거 */}
-              <div className="trigger-type-section">
-                <div className="trigger-type-header">
-                  <h5>명령어 트리거</h5>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newTrigger: Trigger = {
-                        id: `t${Date.now()}`,
-                        type: 'command',
-                        commandKeyword: '',
-                        content: '',
-                      }
-                      setFormData({
-                        ...formData,
-                        triggers: [...formData.triggers, newTrigger],
-                      })
-                    }}
-                    className="add-button small"
-                  >
-                    <Plus size={14} />
-                    추가
-                  </button>
-                </div>
-                <div className="trigger-list">
-                  {formData.triggers.filter(t => t.type === 'command').map((trigger) => (
-                    <div key={trigger.id} className="trigger-item">
-                      <div className="trigger-header">
-                        <span className="trigger-type-label">명령어 트리거</span>
-                        <button
-                          type="button"
-                          onClick={() => removeTrigger(trigger.id)}
-                          className="remove-button"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                      <div className="form-group">
-                        <label>명령어 키워드</label>
-                        <input
-                          type="text"
-                          value={trigger.commandKeyword || ''}
-                          onChange={(e) => updateTrigger(trigger.id, { commandKeyword: e.target.value })}
-                          placeholder="@앱이름 create, @앱이름 status 등"
-                        />
-                        <p className="help-text">@앱이름 + 명령어 키워드 형식으로 입력하세요.</p>
-                      </div>
-                      <div className="form-group">
-                        <label>설명 (선택)</label>
-                        <input
-                          type="text"
-                          value={trigger.content || ''}
-                          onChange={(e) => updateTrigger(trigger.id, { content: e.target.value })}
-                          placeholder="이 명령어에 대한 설명"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  {formData.triggers.filter(t => t.type === 'command').length === 0 && (
-                    <div className="empty-trigger-message">
-                      명령어 트리거가 없습니다. 추가 버튼을 클릭하여 추가하세요.
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
