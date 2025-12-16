@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Bot,
   User,
@@ -16,7 +16,6 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const location = useLocation()
   const navigate = useNavigate()
   const [agents] = useState([
     { id: '2', name: 'AI 에이전트', active: true },
@@ -58,9 +57,6 @@ export default function Layout({ children }: LayoutProps) {
               >
                 <Bot size={18} />
                 <span>{agent.name}</span>
-                {agent.unread && (
-                  <span className="badge">{agent.unread}+</span>
-                )}
               </Link>
             ))}
           </div>

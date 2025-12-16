@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Save, X, Plus, Edit2, CheckCircle, XCircle, Loader } from 'lucide-react'
-import { Agent, Trigger, Behavior, Skill, Command, WebhookConfig, DialogConfig, DialogField, MCPServer, ReferenceDataItem, ExternalIntegration } from '../types/agent'
+import { useState } from 'react'
+import { Save, X, Plus, Edit2, CheckCircle, XCircle } from 'lucide-react'
+import { Agent, Trigger, Behavior, Command, DialogConfig, ReferenceDataItem, ExternalIntegration } from '../types/agent'
 import './AgentForm.css'
 
 interface AgentFormProps {
@@ -146,18 +146,6 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
     onSave(formData)
   }
 
-  const addTrigger = () => {
-    const newTrigger: Trigger = {
-      id: `t${Date.now()}`,
-      type: 'keyword',
-      content: '',
-      keywords: [],
-    }
-    setFormData({
-      ...formData,
-      triggers: [...formData.triggers, newTrigger],
-    })
-  }
 
   const removeTrigger = (id: string) => {
     setFormData({
@@ -863,6 +851,7 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
                         id: `t${Date.now()}`,
                         type: 'keyword',
                         keywords: [],
+                        content: '',
                       }
                       setFormData({
                         ...formData,
@@ -921,6 +910,7 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
                         id: `t${Date.now()}`,
                         type: 'command',
                         commandKeyword: '',
+                        content: '',
                       }
                       setFormData({
                         ...formData,

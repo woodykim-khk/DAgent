@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Search, Bot, Trash2 } from 'lucide-react'
-import { Agent, LicenseInfo } from '../types/agent'
+import { ArrowLeft, Search, Bot } from 'lucide-react'
+import { Agent } from '../types/agent'
 import './AgentList.css'
 
 export default function AgentList() {
@@ -10,12 +10,6 @@ export default function AgentList() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [licenseInfo] = useState<LicenseInfo>({
-    standard: 5,
-    premium: 3,
-    maxAgents: 20,
-    currentAgents: 0,
-  })
 
   useEffect(() => {
     // 임시 데이터
@@ -32,9 +26,10 @@ export default function AgentList() {
         languageModel: 'gemini-2.5-pro',
         useSearchGrounding: true,
         referenceData: {
-          tasks: true,
-          wiki: true,
-          drive: false,
+          items: [
+            { id: '1', type: 'tasks', name: '업무 데이터', enabled: true },
+            { id: '2', type: 'wiki', name: '위키 데이터', enabled: true },
+          ],
           customGuidelines: '친절하고 전문적인 톤으로 답변',
         },
         triggers: [],
@@ -59,9 +54,10 @@ export default function AgentList() {
         languageModel: 'gpt-5.1',
         useSearchGrounding: false,
         referenceData: {
-          tasks: false,
-          wiki: true,
-          drive: true,
+          items: [
+            { id: '1', type: 'wiki', name: '위키 데이터', enabled: true },
+            { id: '2', type: 'drive', name: '드라이브 데이터', enabled: true },
+          ],
           customGuidelines: '',
         },
         triggers: [],

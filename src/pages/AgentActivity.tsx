@@ -24,9 +24,10 @@ export default function AgentActivity() {
       languageModel: 'gemini-2.5-pro',
       useSearchGrounding: true,
       referenceData: {
-        tasks: true,
-        wiki: true,
-        drive: false,
+        items: [
+          { id: '1', type: 'tasks', name: '업무 데이터', enabled: true },
+          { id: '2', type: 'wiki', name: '위키 데이터', enabled: true },
+        ],
         customGuidelines: '친절하고 전문적인 톤으로 답변',
       },
       triggers: [],

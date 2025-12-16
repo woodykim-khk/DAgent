@@ -61,7 +61,7 @@ export interface ExternalIntegration {
 export interface Trigger {
   id: string
   type: 'natural' | 'keyword' | 'command'
-  content: string
+  content?: string // 키워드 트리거의 경우 선택적
   keywords?: string[]
   commandKeyword?: string // 명령어 트리거의 경우
 }

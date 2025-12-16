@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import AgentForm from '../components/AgentForm'
 import './AgentCreate.css'
 
@@ -8,7 +8,7 @@ export default function AgentCreate() {
   const navigate = useNavigate()
   const [isSaving, setIsSaving] = useState(false)
 
-  const handleSave = async (agentData: any) => {
+  const handleSave = async () => {
     setIsSaving(true)
     // 실제로는 API 호출
     await new Promise(resolve => setTimeout(resolve, 1000))

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, Trash2 } from 'lucide-react'
 import AgentForm from '../components/AgentForm'
 import { Agent } from '../types/agent'
 import './AgentEdit.css'
@@ -26,9 +26,10 @@ export default function AgentEdit() {
       languageModel: 'gemini-2.5-pro',
       useSearchGrounding: true,
       referenceData: {
-        tasks: true,
-        wiki: true,
-        drive: false,
+        items: [
+          { id: '1', type: 'tasks', name: '업무 데이터', enabled: true },
+          { id: '2', type: 'wiki', name: '위키 데이터', enabled: true },
+        ],
         customGuidelines: '친절하고 전문적인 톤으로 답변',
       },
       triggers: [
@@ -48,7 +49,7 @@ export default function AgentEdit() {
     setAgent(mockAgent)
   }, [id])
 
-  const handleSave = async (agentData: any) => {
+  const handleSave = async () => {
     setIsSaving(true)
     // 실제로는 API 호출
     await new Promise(resolve => setTimeout(resolve, 1000))
