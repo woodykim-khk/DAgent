@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Save, X, Plus, Edit2, CheckCircle, XCircle } from 'lucide-react'
-import { Agent, Trigger, Behavior, ReferenceDataItem, ExternalIntegration } from '../types/agent'
+import { Agent, Trigger, Action, ReferenceDataItem, ExternalIntegration } from '../types/agent'
 import './AgentForm.css'
 
 interface AgentFormProps {
@@ -21,7 +21,7 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
     organizationId: agent?.organizationId || '',
     profileImage: agent?.profileImage || '',
     languageModel: agent?.languageModel || 'gemini-2.5-pro',
-    useSearchGrounding: agent?.useSearchGrounding ?? true,
+    useSearchGrounding: agent?.useSearchGrounding ?? false,
     referenceData: {
       items: agent?.referenceData?.items || [],
       customGuidelines: agent?.referenceData?.customGuidelines || '',
@@ -35,21 +35,25 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
     triggers: agent?.triggers || [
       {
         id: 't1',
+        name: '건강검진휴가',
         type: 'keyword',
-        keywords: ['일정', '스케줄', '데드라인'],
+        keywords: ['건강 검진 휴가', '건강검진'],
       },
       {
         id: 't2',
+        name: '휴가 문의하는 경우',
         type: 'natural',
-        content: '프로젝트 진행 상황에 대해 질문할 때',
+        content: '휴가 관련 문의가 있거나, 누군가 궁금해하는 경우',
       },
       {
         id: 't3',
+        name: '@휴가쟁이 check',
         type: 'command',
-        commandKeyword: '@인사팀 create',
-        content: '휴가 신청',
+        commandKeyword: '@휴가쟁이 /check',
+        content: '휴가 잔여일 조회',
       },
     ],
+    actions: agent?.actions || [],
     behaviors: agent?.behaviors || [
       {
         id: 'b1',
@@ -227,139 +231,7 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
                 <option value="org3">기획팀</option>
               </select>
             </div>
-          </div>
-        )}
 
-        {activeTab === 'data' && (
-          <div className="form-section">
-            <h3>데이터 설정</h3>
-            <div className="form-group">
-              <label>언어 모델 선택 *</label>
-              <select
-                value={formData.languageModel}
-                onChange={(e) => setFormData({ ...formData, languageModel: e.target.value })}
-                required
-              >
-                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                <option value="gpt-5.1">GPT-5.1</option>
-                <option value="claude-sonnet-4">Claude Sonnet 4</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={formData.useSearchGrounding}
-                  onChange={(e) => setFormData({ ...formData, useSearchGrounding: e.target.checked })}
-                />
-                검색 그라운딩 이용
-              </label>
-            </div>
-            <div className="form-group">
-              <label>참조 데이터</label>
-              <div className="reference-data-list">
-                {formData.referenceData.items.map((item) => (
-                  <div key={item.id} className="reference-data-item">
-                    <div className="reference-data-header">
-                      <div className="reference-data-info">
-                        <span className="reference-data-name">{item.name}</span>
-                        <span className="reference-data-type">{item.type === 'tasks' ? '업무' : item.type === 'wiki' ? '위키' : item.type === 'drive' ? '드라이브' : '커스텀'}</span>
-                      </div>
-                      <div className="reference-data-actions">
-                        <label className="toggle-switch">
-                          <input
-                            type="checkbox"
-                            checked={item.enabled}
-                            onChange={(e) => {
-                              setFormData({
-                                ...formData,
-                                referenceData: {
-                                  ...formData.referenceData,
-                                  items: formData.referenceData.items.map(i =>
-                                    i.id === item.id ? { ...i, enabled: e.target.checked } : i
-                                  ),
-                                },
-                              })
-                            }}
-                          />
-                          <span className="toggle-slider"></span>
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFormData({
-                              ...formData,
-                              referenceData: {
-                                ...formData.referenceData,
-                                items: formData.referenceData.items.filter(i => i.id !== item.id),
-                              },
-                            })
-                          }}
-                          className="remove-button"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {formData.referenceData.items.length === 0 && (
-                  <div className="empty-reference-data">
-                    참조 데이터가 없습니다. 추가 버튼을 클릭하여 추가하세요.
-                  </div>
-                )}
-              </div>
-              <div className="reference-data-add-buttons">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReferenceDialogType('tasks')
-                    setShowReferenceDialog(true)
-                    setSelectedReferences([])
-                  }}
-                  className="add-reference-button"
-                >
-                  <Plus size={16} />
-                  업무 추가
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReferenceDialogType('wiki')
-                    setShowReferenceDialog(true)
-                    setSelectedReferences([])
-                  }}
-                  className="add-reference-button"
-                >
-                  <Plus size={16} />
-                  위키 추가
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReferenceDialogType('drive')
-                    setShowReferenceDialog(true)
-                    setSelectedReferences([])
-                  }}
-                  className="add-reference-button"
-                >
-                  <Plus size={16} />
-                  드라이브 추가
-                </button>
-              </div>
-            </div>
-            <div className="form-group">
-              <label>상세 지침</label>
-              <textarea
-                value={formData.referenceData.customGuidelines}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  referenceData: { ...formData.referenceData, customGuidelines: e.target.value },
-                })}
-                placeholder="에이전트가 참고할 정보나 선호하는 답변 스타일을 자유롭게 작성하세요"
-                rows={6}
-              />
-            </div>
             <div className="form-group">
               <h4>🔗 외부 연동</h4>
               <p className="section-description">
@@ -493,7 +365,7 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
                         )}
                         {integration.type === 'mcp' && (
                           <div className="form-group">
-                            <label>API Key (선택)</label>
+                            <label>인증 토큰 (선택)</label>
                             <input
                               type="password"
                               value={integration.apiKey || ''}
@@ -505,7 +377,386 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
                                   ),
                                 })
                               }}
-                              placeholder="API Key (필요한 경우)"
+                              placeholder="인증 토큰 (필요한 경우)"
+                            />
+                          </div>
+                        )}
+                        <div className="form-group">
+                          <button
+                            type="button"
+                            onClick={() => setEditingCommand(editingCommand === integration.id ? null : integration.id)}
+                            className="save-button"
+                          >
+                            저장
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {editingCommand !== integration.id && (
+                      <button
+                        type="button"
+                        onClick={() => setEditingCommand(editingCommand === integration.id ? null : integration.id)}
+                        className="edit-button"
+                      >
+                        <Edit2 size={16} />
+                        편집
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="external-integration-add-buttons">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newIntegration: ExternalIntegration = {
+                      id: `app-${Date.now()}`,
+                      type: 'app',
+                      name: '새 APP 연동',
+                      serverUrl: '',
+                      enabled: true,
+                      token: '',
+                      appId: '',
+                    }
+                    setFormData({
+                      ...formData,
+                      externalIntegrations: [...formData.externalIntegrations!, newIntegration],
+                    })
+                    setEditingCommand(newIntegration.id)
+                  }}
+                  className="add-button"
+                >
+                  <Plus size={16} />
+                  APP 연동 추가
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newIntegration: ExternalIntegration = {
+                      id: `mcp-${Date.now()}`,
+                      type: 'mcp',
+                      name: '새 MCP 서버',
+                      serverUrl: '',
+                      enabled: true,
+                    }
+                    setFormData({
+                      ...formData,
+                      externalIntegrations: [...formData.externalIntegrations!, newIntegration],
+                    })
+                    setEditingCommand(newIntegration.id)
+                  }}
+                  className="add-button"
+                >
+                  <Plus size={16} />
+                  MCP 서버 추가
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'data' && (
+          <div className="form-section">
+            <h3>데이터 설정</h3>
+            <div className="form-group">
+              <label>언어 모델 선택 *</label>
+              <select
+                value={formData.languageModel}
+                onChange={(e) => setFormData({ ...formData, languageModel: e.target.value })}
+                required
+              >
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                <option value="gpt-5.1">GPT-5.1</option>
+                <option value="claude-sonnet-4">Claude Sonnet 4</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={formData.useSearchGrounding}
+                  onChange={(e) => setFormData({ ...formData, useSearchGrounding: e.target.checked })}
+                />
+                검색 그라운딩 이용
+              </label>
+            </div>
+            <div className="form-group">
+              <label>참조 데이터</label>
+              <div className="reference-data-list">
+                {formData.referenceData.items.map((item) => (
+                  <div key={item.id} className="reference-data-item">
+                    <div className="reference-data-header">
+                      <div className="reference-data-info">
+                        <span className="reference-data-name">{item.name}</span>
+                        <span className="reference-data-type">{item.type === 'tasks' ? '업무' : item.type === 'wiki' ? '위키' : item.type === 'drive' ? '드라이브' : '커스텀'}</span>
+                      </div>
+                      <div className="reference-data-actions">
+                        <label className="toggle-switch">
+                          <input
+                            type="checkbox"
+                            checked={item.enabled}
+                            onChange={(e) => {
+                              setFormData({
+                                ...formData,
+                                referenceData: {
+                                  ...formData.referenceData,
+                                  items: formData.referenceData.items.map(i =>
+                                    i.id === item.id ? { ...i, enabled: e.target.checked } : i
+                                  ),
+                                },
+                              })
+                            }}
+                          />
+                          <span className="toggle-slider"></span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              referenceData: {
+                                ...formData.referenceData,
+                                items: formData.referenceData.items.filter(i => i.id !== item.id),
+                              },
+                            })
+                          }}
+                          className="remove-button"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {formData.referenceData.items.length === 0 && (
+                  <div className="empty-reference-data">
+                    참조 데이터가 없습니다. 추가 버튼을 클릭하여 추가하세요.
+                  </div>
+                )}
+              </div>
+              <div className="reference-data-add-buttons">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReferenceDialogType('tasks')
+                    setShowReferenceDialog(true)
+                    setSelectedReferences([])
+                  }}
+                  className="add-reference-button"
+                >
+                  <Plus size={16} />
+                  업무 추가
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReferenceDialogType('wiki')
+                    setShowReferenceDialog(true)
+                    setSelectedReferences([])
+                  }}
+                  className="add-reference-button"
+                >
+                  <Plus size={16} />
+                  위키 추가
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReferenceDialogType('drive')
+                    setShowReferenceDialog(true)
+                    setSelectedReferences([])
+                  }}
+                  className="add-reference-button"
+                >
+                  <Plus size={16} />
+                  드라이브 추가
+                </button>
+              </div>
+            </div>
+            <div className="form-group">
+              <label>상세 지침</label>
+              <textarea
+                value={formData.referenceData.customGuidelines}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  referenceData: { ...formData.referenceData, customGuidelines: e.target.value },
+                })}
+                placeholder="에이전트가 참고할 정보나 선호하는 답변 스타일을 자유롭게 작성하세요"
+                rows={6}
+              />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'basic' && (
+          <div className="form-section">
+            <div className="form-group">
+              <h4>🔗 외부 연동</h4>
+              <p className="section-description">
+                APP 연동 및 MCP 서버 연동을 통합 관리합니다.
+              </p>
+              <div className="external-integration-list">
+                {formData.externalIntegrations!.map((integration) => (
+                  <div key={integration.id} className="external-integration-item">
+                    <div className="external-integration-header">
+                      <div className="external-integration-info">
+                        <div className="external-integration-name-row">
+                          <span className={`integration-type-badge ${integration.type}`}>
+                            {integration.type === 'app' ? 'APP' : 'MCP'}
+                          </span>
+                          <span className="external-integration-name">{integration.name}</span>
+                          {integration.status && (
+                            <span className={`integration-status-badge ${integration.status}`}>
+                              {integration.status === 'connected' && <CheckCircle size={14} />}
+                              {integration.status === 'disconnected' && <XCircle size={14} />}
+                              {integration.status === 'error' && <XCircle size={14} />}
+                              {integration.status === 'connected' ? '연결됨' : integration.status === 'error' ? '오류' : '연결 안됨'}
+                            </span>
+                          )}
+                        </div>
+                        <span className="external-integration-url">{integration.serverUrl}</span>
+                      </div>
+                      <div className="external-integration-actions">
+                        <label className="toggle-switch">
+                          <input
+                            type="checkbox"
+                            checked={integration.enabled}
+                            onChange={(e) => {
+                              setFormData({
+                                ...formData,
+                                externalIntegrations: formData.externalIntegrations!.map(i =>
+                                  i.id === integration.id ? { ...i, enabled: e.target.checked } : i
+                                ),
+                              })
+                            }}
+                          />
+                          <span className="toggle-slider"></span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              externalIntegrations: formData.externalIntegrations!.filter(i => i.id !== integration.id),
+                            })
+                          }}
+                          className="remove-button"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    {editingCommand === integration.id && (
+                      <div className="external-integration-edit-form">
+                        <div className="form-group">
+                          <label>연동 이름 *</label>
+                          <input
+                            type="text"
+                            value={integration.name}
+                            onChange={(e) => {
+                              setFormData({
+                                ...formData,
+                                externalIntegrations: formData.externalIntegrations!.map(i =>
+                                  i.id === integration.id ? { ...i, name: e.target.value } : i
+                                ),
+                              })
+                            }}
+                            placeholder={integration.type === 'app' ? 'APP 연동 이름' : 'MCP 서버 이름'}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>서버 URL *</label>
+                          <input
+                            type="url"
+                            value={integration.serverUrl}
+                            onChange={(e) => {
+                              setFormData({
+                                ...formData,
+                                externalIntegrations: formData.externalIntegrations!.map(i =>
+                                  i.id === integration.id ? { ...i, serverUrl: e.target.value } : i
+                                ),
+                              })
+                            }}
+                            placeholder="https://example.com/api"
+                          />
+                        </div>
+                        {integration.type === 'app' && (
+                          <>
+                            <div className="form-group">
+                              <label>토큰</label>
+                              <div className="token-input-group">
+                                <input
+                                  type="text"
+                                  value={integration.token || ''}
+                                  onChange={(e) => {
+                                    setFormData({
+                                      ...formData,
+                                      externalIntegrations: formData.externalIntegrations!.map(i =>
+                                        i.id === integration.id ? { ...i, token: e.target.value } : i
+                                      ),
+                                    })
+                                  }}
+                                  placeholder="토큰을 입력하세요"
+                                />
+                                <button type="button" className="token-button">
+                                  생성
+                                </button>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <label>App ID</label>
+                              <input
+                                type="text"
+                                value={integration.appId || ''}
+                                onChange={(e) => {
+                                  setFormData({
+                                    ...formData,
+                                    externalIntegrations: formData.externalIntegrations!.map(i =>
+                                      i.id === integration.id ? { ...i, appId: e.target.value } : i
+                                    ),
+                                  })
+                                }}
+                                placeholder="App ID"
+                              />
+                            </div>
+                          </>
+                        )}
+                        {integration.type === 'mcp' && (
+                          <div className="form-group">
+                            <label>인증 토큰 (선택)</label>
+                            <input
+                              type="password"
+                              value={integration.apiKey || ''}
+                              onChange={(e) => {
+                                setFormData({
+                                  ...formData,
+                                  externalIntegrations: formData.externalIntegrations!.map(i =>
+                                    i.id === integration.id ? { ...i, apiKey: e.target.value } : i
+                                  ),
+                                })
+                              }}
+                              placeholder="인증 토큰 (필요한 경우)"
+                            />
+                          </div>
+                        )}
+                        {integration.type === 'app' && (
+                          <div className="form-group">
+                            <label>토큰 범위 (선택)</label>
+                            <input
+                              type="text"
+                              value={integration.tokenScope?.join(', ') || ''}
+                              onChange={(e) => {
+                                setFormData({
+                                  ...formData,
+                                  externalIntegrations: formData.externalIntegrations!.map(i =>
+                                    i.id === integration.id ? {
+                                      ...i,
+                                      tokenScope: e.target.value.split(',').map(s => s.trim()).filter(s => s),
+                                    } : i
+                                  ),
+                                })
+                              }}
+                              placeholder="토큰 범위를 쉼표로 구분하여 입력"
                             />
                           </div>
                         )}
@@ -609,6 +860,7 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
               <div className="trigger-type-card" onClick={() => {
                 const newTrigger: Trigger = {
                   id: `t${Date.now()}`,
+                  name: '',
                   type: 'natural',
                   content: '',
                 }
@@ -628,6 +880,7 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
               <div className="trigger-type-card" onClick={() => {
                 const newTrigger: Trigger = {
                   id: `t${Date.now()}`,
+                  name: '',
                   type: 'keyword',
                   keywords: [],
                   content: '',
@@ -648,6 +901,7 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
               <div className="trigger-type-card" onClick={() => {
                 const newTrigger: Trigger = {
                   id: `t${Date.now()}`,
+                  name: '',
                   type: 'command',
                   commandKeyword: '',
                   content: '',
@@ -679,9 +933,7 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
                           {trigger.type === 'command' && '⚡ 명령어'}
                         </span>
                         <span className="trigger-preview">
-                          {trigger.type === 'keyword' && (trigger.keywords?.join(', ') || '키워드 없음')}
-                          {trigger.type === 'command' && (trigger.commandKeyword || '명령어 없음')}
-                          {trigger.type === 'natural' && (trigger.content || '내용 없음')}
+                          {trigger.name || '트리거명 없음'}
                         </span>
                       </div>
                       <button
@@ -693,6 +945,15 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
                       </button>
                     </div>
                     <div className="trigger-item-form">
+                      <div className="form-group">
+                        <label>트리거명 *</label>
+                        <input
+                          type="text"
+                          value={trigger.name}
+                          onChange={(e) => updateTrigger(trigger.id, { name: e.target.value })}
+                          placeholder="예: 휴가 문의하는 경우"
+                        />
+                      </div>
                       {trigger.type === 'natural' && (
                         <div className="form-group">
                           <label>트리거 내용</label>
@@ -757,55 +1018,65 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
 
         {activeTab === 'behavior' && (
           <div className="form-section">
-            <h3>행동 설정</h3>
+            <h3>액션 설정</h3>
             <p className="section-description">
-              트리거 설정에서 지정한 키워드에 대해 에이전트가 수행할 행동을 설정하세요.
+              트리거 설정에서 지정한 트리거에 대해 에이전트가 수행할 액션을 설정하세요. 여러 액션을 설정하면 AI가 상황에 맞는 최적의 액션을 자동으로 선택합니다.
             </p>
 
             {formData.triggers.length === 0 ? (
               <div className="empty-trigger-message">
-                <p>먼저 "연동 및 동작 설정" 탭에서 트리거(키워드)를 설정해주세요.</p>
+                <p>먼저 "트리거 설정" 탭에서 트리거를 설정해주세요.</p>
               </div>
             ) : (
               formData.triggers.map((trigger) => {
-                const triggerBehaviors = formData.behaviors.filter(b => b.triggerId === trigger.id)
-
-                const getTriggerLabel = () => {
-                  if (trigger.type === 'keyword') {
-                    return trigger.keywords?.join(', ') || '키워드 없음'
-                  } else if (trigger.type === 'command') {
-                    return trigger.commandKeyword || '명령어 없음'
-                  } else {
-                    return trigger.content || '자연어 트리거'
-                  }
-                }
+                const triggerActions = (formData.actions || []).filter(a => a.triggerId === trigger.id)
 
                 return (
                   <div key={trigger.id} className="behavior-item">
                     <div className="behavior-header">
                       <h4>
-                        {trigger.type === 'keyword' && '키워드: '}
-                        {trigger.type === 'command' && '명령어: '}
-                        {trigger.type === 'natural' && '자연어: '}
-                        {getTriggerLabel()}
+                        {trigger.name || '트리거명 없음'}
+                        <span className="trigger-type-badge-small">
+                          {trigger.type === 'keyword' && '🔑 키워드'}
+                          {trigger.type === 'command' && '⚡ 명령어'}
+                          {trigger.type === 'natural' && '💬 자연어'}
+                        </span>
                       </h4>
                     </div>
 
                     <div className="behavior-list">
-                      {triggerBehaviors.map((behavior) => (
-                        <div key={behavior.id} className="behavior-config-item">
+                      {triggerActions.map((action) => (
+                        <div key={action.id} className="behavior-config-item">
                           <div className="behavior-config-header">
                             <span className="behavior-action-label">
-                              {behavior.action === 'message' ? '💬 메시지 답변' : 
-                               behavior.action === 'notification' ? '🔔 알림 전송' : 
-                               '💬🔔 메시지 + 알림'}
+                              {action.type === 'dooray_messenger' && '💬 Dooray! 메신저에서 답변'}
+                              {action.type === 'dooray_task' && '📋 Dooray! 업무로 생성'}
+                              {action.type === 'external_app' && '🔗 외부 APP에서 처리'}
+                              {action.type === 'mcp_server' && '⚙️ MCP 서버 연동 처리'}
                             </span>
+                            <div className="behavior-action-priority">
+                              <label>우선순위:</label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={action.priority}
+                                onChange={(e) => {
+                                  setFormData({
+                                    ...formData,
+                                    actions: (formData.actions || []).map(a =>
+                                      a.id === action.id ? { ...a, priority: parseInt(e.target.value) || 1 } : a
+                                    ),
+                                  })
+                                }}
+                                className="priority-input"
+                              />
+                            </div>
                             <button
                               type="button"
                               onClick={() => {
                                 setFormData({
                                   ...formData,
-                                  behaviors: formData.behaviors.filter(b => b.id !== behavior.id),
+                                  actions: (formData.actions || []).filter(a => a.id !== action.id),
                                 })
                               }}
                               className="remove-button"
@@ -815,178 +1086,223 @@ export default function AgentForm({ agent, onSave, isSaving }: AgentFormProps) {
                           </div>
 
                           <div className="form-group">
-                            <label>행동 유형</label>
+                            <label>액션 유형</label>
                             <select
-                              value={behavior.action}
+                              value={action.type}
                               onChange={(e) => {
+                                const newType = e.target.value as Action['type']
                                 setFormData({
                                   ...formData,
-                                  behaviors: formData.behaviors.map(b =>
-                                    b.id === behavior.id ? { ...b, action: e.target.value as 'message' | 'notification' | 'both' } : b
+                                  actions: (formData.actions || []).map(a =>
+                                    a.id === action.id ? {
+                                      ...a,
+                                      type: newType,
+                                      messengerConfig: newType === 'dooray_messenger' ? { replyMode: 'auto' } : undefined,
+                                      taskConfig: newType === 'dooray_task' ? { projectId: '' } : undefined,
+                                      externalAppConfig: newType === 'external_app' ? { integrationId: '' } : undefined,
+                                      mcpServerConfig: newType === 'mcp_server' ? { integrationId: '' } : undefined,
+                                    } : a
                                   ),
                                 })
                               }}
                             >
-                              <option value="message">메시지 답변만</option>
-                              <option value="notification">알림 전송만</option>
-                              <option value="both">메시지 답변 + 알림 전송</option>
+                              <option value="dooray_messenger">Dooray! 메신저에서 답변</option>
+                              <option value="dooray_task">Dooray! 업무로 생성</option>
+                              <option value="external_app">외부 APP에서 처리</option>
+                              <option value="mcp_server">MCP 서버 연동 처리</option>
                             </select>
                           </div>
 
-                          {(behavior.action === 'message' || behavior.action === 'both') && (
-                            <>
-                              <div className="form-group">
-                                <label className="checkbox-label">
-                                  <input
-                                    type="checkbox"
-                                    checked={behavior.autoReply}
-                                    onChange={(e) => {
-                                      setFormData({
-                                        ...formData,
-                                        behaviors: formData.behaviors.map(b =>
-                                          b.id === behavior.id ? { ...b, autoReply: e.target.checked } : b
-                                        ),
-                                      })
-                                    }}
-                                  />
-                                  자동 답변 이용
-                                </label>
-                                <p className="help-text">
-                                  체크 시 별도의 승인 없이 대화방의 모든 구성원에게 공유됩니다.
-                                </p>
-                              </div>
-                              {!behavior.autoReply && (
-                                <div className="form-group">
+                          {action.type === 'dooray_messenger' && (
+                            <div className="form-group">
+                              <label>답변 방식 *</label>
+                              <select
+                                value={action.messengerConfig?.replyMode || 'auto'}
+                                onChange={(e) => {
+                                  setFormData({
+                                    ...formData,
+                                    actions: (formData.actions || []).map(a =>
+                                      a.id === action.id ? {
+                                        ...a,
+                                        messengerConfig: {
+                                          replyMode: e.target.value as 'auto' | 'approval',
+                                          approvalTarget: e.target.value === 'approval' ? 'trigger_user' : undefined,
+                                        },
+                                      } : a
+                                    ),
+                                  })
+                                }}
+                              >
+                                <option value="auto">자동 답변</option>
+                                <option value="approval">승인 후 답변</option>
+                              </select>
+                              {action.messengerConfig?.replyMode === 'approval' && (
+                                <div className="form-group" style={{ marginTop: '12px' }}>
                                   <label>승인 대상</label>
                                   <select
-                                    value={behavior.approvalTarget}
+                                    value={action.messengerConfig?.approvalTarget || 'trigger_user'}
                                     onChange={(e) => {
                                       setFormData({
                                         ...formData,
-                                        behaviors: formData.behaviors.map(b =>
-                                          b.id === behavior.id ? { ...b, approvalTarget: e.target.value as 'trigger_user' | 'inviter' | 'caller' } : b
+                                        actions: (formData.actions || []).map(a =>
+                                          a.id === action.id ? {
+                                            ...a,
+                                            messengerConfig: {
+                                              ...a.messengerConfig!,
+                                              approvalTarget: e.target.value as 'trigger_user' | 'caller',
+                                            },
+                                          } : a
                                         ),
                                       })
                                     }}
                                   >
                                     <option value="trigger_user">트리거를 발생시킨 이용자</option>
-                                    <option value="inviter">에이전트를 초대한 이용자</option>
                                     <option value="caller">호출한 이용자</option>
                                   </select>
                                 </div>
                               )}
-                            </>
-                          )}
-
-                          {(behavior.action === 'notification' || behavior.action === 'both') && (
-                            <div className="notification-config">
-                              <h5>알림 스킬 설정</h5>
-                              <div className="form-group">
-                                <label>Webhook URL *</label>
-                                <input
-                                  type="url"
-                                  value={behavior.notificationConfig?.webhookUrl || ''}
-                                  onChange={(e) => {
-                                    setFormData({
-                                      ...formData,
-                                      behaviors: formData.behaviors.map(b =>
-                                        b.id === behavior.id ? {
-                                          ...b,
-                                          notificationConfig: {
-                                            ...b.notificationConfig,
-                                            webhookUrl: e.target.value,
-                                            messageTemplate: b.notificationConfig?.messageTemplate || '',
-                                            includeContext: b.notificationConfig?.includeContext ?? true,
-                                          },
-                                        } : b
-                                      ),
-                                    })
-                                  }}
-                                  placeholder="https://webhook.example.com/notify"
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>메시지 템플릿</label>
-                                <textarea
-                                  value={behavior.notificationConfig?.messageTemplate || ''}
-                                  onChange={(e) => {
-                                    setFormData({
-                                      ...formData,
-                                      behaviors: formData.behaviors.map(b =>
-                                        b.id === behavior.id ? {
-                                          ...b,
-                                          notificationConfig: {
-                                            ...b.notificationConfig,
-                                            webhookUrl: b.notificationConfig?.webhookUrl || '',
-                                            messageTemplate: e.target.value,
-                                            includeContext: b.notificationConfig?.includeContext ?? true,
-                                          },
-                                        } : b
-                                      ),
-                                    })
-                                  }}
-                                  placeholder="알림 메시지 템플릿 (예: {user}님이 {keyword} 키워드를 사용했습니다)"
-                                  rows={3}
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label className="checkbox-label">
-                                  <input
-                                    type="checkbox"
-                                    checked={behavior.notificationConfig?.includeContext ?? true}
-                                    onChange={(e) => {
-                                      setFormData({
-                                        ...formData,
-                                        behaviors: formData.behaviors.map(b =>
-                                          b.id === behavior.id ? {
-                                            ...b,
-                                            notificationConfig: {
-                                              ...b.notificationConfig,
-                                              webhookUrl: b.notificationConfig?.webhookUrl || '',
-                                              messageTemplate: b.notificationConfig?.messageTemplate || '',
-                                              includeContext: e.target.checked,
-                                            },
-                                          } : b
-                                        ),
-                                      })
-                                    }}
-                                  />
-                                  대화 맥락 포함
-                                </label>
-                                <p className="help-text">
-                                  체크 시 최근 30개 말풍선의 맥락을 알림에 포함합니다.
-                                </p>
-                              </div>
                             </div>
                           )}
+
+                          {action.type === 'dooray_task' && (
+                            <div className="form-group">
+                              <label>대상 프로젝트 *</label>
+                              <select
+                                value={action.taskConfig?.projectId || ''}
+                                onChange={(e) => {
+                                  setFormData({
+                                    ...formData,
+                                    actions: (formData.actions || []).map(a =>
+                                      a.id === action.id ? {
+                                        ...a,
+                                        taskConfig: {
+                                          projectId: e.target.value,
+                                          projectName: e.target.options[e.target.selectedIndex].text,
+                                        },
+                                      } : a
+                                    ),
+                                  })
+                                }}
+                              >
+                                <option value="">프로젝트를 선택하세요</option>
+                                <option value="proj1">인사팀 프로젝트</option>
+                                <option value="proj2">개발팀 프로젝트</option>
+                                <option value="proj3">디자인팀 프로젝트</option>
+                              </select>
+                            </div>
+                          )}
+
+                          {action.type === 'external_app' && (
+                            <div className="form-group">
+                              <label>연동할 외부 APP *</label>
+                              <select
+                                value={action.externalAppConfig?.integrationId || ''}
+                                onChange={(e) => {
+                                  const selectedIntegration = formData.externalIntegrations!.find(i => i.id === e.target.value && i.type === 'app')
+                                  setFormData({
+                                    ...formData,
+                                    actions: (formData.actions || []).map(a =>
+                                      a.id === action.id ? {
+                                        ...a,
+                                        externalAppConfig: {
+                                          integrationId: e.target.value,
+                                          integrationName: selectedIntegration?.name,
+                                        },
+                                      } : a
+                                    ),
+                                  })
+                                }}
+                              >
+                                <option value="">외부 APP을 선택하세요</option>
+                                {formData.externalIntegrations!.filter(i => i.type === 'app').map(integration => (
+                                  <option key={integration.id} value={integration.id}>{integration.name}</option>
+                                ))}
+                              </select>
+                              {formData.externalIntegrations!.filter(i => i.type === 'app').length === 0 && (
+                                <p className="help-text">먼저 기본 정보 탭에서 APP 연동을 추가하세요.</p>
+                              )}
+                            </div>
+                          )}
+
+                          {action.type === 'mcp_server' && (
+                            <div className="form-group">
+                              <label>연동할 MCP 서버 *</label>
+                              <select
+                                value={action.mcpServerConfig?.integrationId || ''}
+                                onChange={(e) => {
+                                  const selectedIntegration = formData.externalIntegrations!.find(i => i.id === e.target.value && i.type === 'mcp')
+                                  setFormData({
+                                    ...formData,
+                                    actions: (formData.actions || []).map(a =>
+                                      a.id === action.id ? {
+                                        ...a,
+                                        mcpServerConfig: {
+                                          integrationId: e.target.value,
+                                          integrationName: selectedIntegration?.name,
+                                        },
+                                      } : a
+                                    ),
+                                  })
+                                }}
+                              >
+                                <option value="">MCP 서버를 선택하세요</option>
+                                {formData.externalIntegrations!.filter(i => i.type === 'mcp').map(integration => (
+                                  <option key={integration.id} value={integration.id}>{integration.name}</option>
+                                ))}
+                              </select>
+                              {formData.externalIntegrations!.filter(i => i.type === 'mcp').length === 0 && (
+                                <p className="help-text">먼저 기본 정보 탭에서 MCP 서버 연동을 추가하세요.</p>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="form-group">
+                            <label className="checkbox-label">
+                              <input
+                                type="checkbox"
+                                checked={action.enabled}
+                                onChange={(e) => {
+                                  setFormData({
+                                    ...formData,
+                                    actions: (formData.actions || []).map(a =>
+                                      a.id === action.id ? { ...a, enabled: e.target.checked } : a
+                                    ),
+                                  })
+                                }}
+                              />
+                              활성화
+                            </label>
+                          </div>
                         </div>
                       ))}
-                      {triggerBehaviors.length === 0 && (
+                      {triggerActions.length === 0 && (
                         <div className="empty-reference-data">
-                          이 트리거에 대한 행동이 없습니다. 행동 추가 버튼을 클릭하여 추가하세요.
+                          이 트리거에 대한 액션이 없습니다. 액션 추가 버튼을 클릭하여 추가하세요.
                         </div>
                       )}
                     </div>
                     <button
                       type="button"
                       onClick={() => {
-                        const newBehavior: Behavior = {
-                          id: `b${Date.now()}`,
+                        const newAction: Action = {
+                          id: `a${Date.now()}`,
                           triggerId: trigger.id,
-                          action: 'message',
-                          autoReply: true,
-                          approvalRequired: false,
-                          approvalTarget: 'trigger_user',
+                          type: 'dooray_messenger',
+                          priority: (triggerActions.length + 1),
+                          enabled: true,
+                          messengerConfig: {
+                            replyMode: 'auto',
+                          },
                         }
                         setFormData({
                           ...formData,
-                          behaviors: [...formData.behaviors, newBehavior],
+                          actions: [...(formData.actions || []), newAction],
                         })
                       }}
                       className="add-button"
                     >
                       <Plus size={16} />
-                      행동 추가
+                      액션 추가
                     </button>
                   </div>
                 )

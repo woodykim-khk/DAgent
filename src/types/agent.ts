@@ -14,7 +14,8 @@ export interface Agent {
   appIntegration?: AppIntegration // 하위 호환성을 위해 유지
   externalIntegrations?: ExternalIntegration[]
   triggers: Trigger[]
-  behaviors: Behavior[]
+  behaviors: Behavior[] // 하위 호환성
+  actions?: Action[] // 새로운 액션 시스템
   skills?: Skill
   mcpServers?: MCPServer[] // 하위 호환성을 위해 유지
   permissions: Permissions
@@ -60,19 +61,51 @@ export interface ExternalIntegration {
 
 export interface Trigger {
   id: string
+  name: string // 트리거명
   type: 'natural' | 'keyword' | 'command'
   content?: string // 키워드 트리거의 경우 선택적
   keywords?: string[]
   commandKeyword?: string // 명령어 트리거의 경우
 }
 
-export interface Behavior {
+export interface Action {
   id: string
-  triggerId?: string // 연결된 트리거 ID
-  action: 'message' | 'notification' | 'both'
-  autoReply: boolean
-  approvalRequired: boolean
-  approvalTarget: 'trigger_user' | 'inviter' | 'caller'
+  triggerId: string // 연결된 트리거 ID
+  type: 'dooray_messenger' | 'dooray_task' | 'external_app' | 'mcp_server'
+  priority: number // 스마트 라우팅 우선순위 (1이 가장 높음)
+  enabled: boolean
+  
+  // Dooray! 메신저 설정
+  messengerConfig?: {
+    replyMode: 'auto' | 'approval' // 자동 답변 / 승인 후 답변
+    approvalTarget?: 'trigger_user' | 'caller'
+  }
+  
+  // Dooray! 업무 설정
+  taskConfig?: {
+    projectId: string
+    projectName?: string
+  }
+  
+  // 외부 APP 설정
+  externalAppConfig?: {
+    integrationId: string
+    integrationName?: string
+  }
+  
+  // MCP 서버 설정
+  mcpServerConfig?: {
+    integrationId: string
+    integrationName?: string
+  }
+}
+
+// 하위 호환성을 위해 Behavior 유지
+export interface Behavior extends Action {
+  action?: 'message' | 'notification' | 'both' // 구버전 호환
+  autoReply?: boolean
+  approvalRequired?: boolean
+  approvalTarget?: 'trigger_user' | 'inviter' | 'caller'
   notificationConfig?: NotificationConfig
 }
 

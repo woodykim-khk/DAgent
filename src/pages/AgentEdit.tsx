@@ -33,10 +33,21 @@ export default function AgentEdit() {
         customGuidelines: '친절하고 전문적인 톤으로 답변',
       },
       triggers: [
-        { id: 't1', type: 'keyword', content: '일정', keywords: ['일정', '스케줄', '데드라인'] },
+        { id: 't1', name: '일정 관련', type: 'keyword', keywords: ['일정', '스케줄', '데드라인'] },
       ],
       behaviors: [
-        { id: 'b1', action: 'message', autoReply: true, approvalRequired: false, approvalTarget: 'trigger_user' },
+        { 
+          id: 'b1', 
+          triggerId: 't1',
+          type: 'dooray_messenger',
+          priority: 1,
+          enabled: true,
+          action: 'message', 
+          autoReply: true, 
+          approvalRequired: false, 
+          approvalTarget: 'trigger_user',
+          messengerConfig: { replyMode: 'auto' },
+        },
       ],
       permissions: {
         managers: ['user1'],
